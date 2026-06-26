@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#1D9E75"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Court POS</title>
+<style>
+:root{
+  --g:#1D9E75;--gl:#E1F5EE;--gd:#085041;--gm:#0F6E56;
+  --b:#378ADD;--bl:#E6F1FB;--bd:#0C447C;
+  --a:#BA7517;--al:#FAEEDA;--ad:#633806;
+  --r:#E24B4A;--rl:#FCEBEB;--rd:#791F1F;
+  --pu:#7F77DD;--pul:#EEEDFE;--pud:#3C3489;
+  --bg:#f5f5f3;--card:#fff;--bdr:#e2e0d8;
+  --t:#1a1a18;--t2:#6b6a64;--t3:#9c9a92;
+  --rad:10px;--rads:7px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--t);font-size:14px;}
+button,input,select,textarea{font-family:inherit;font-size:inherit;}
+button{cursor:pointer;border:none;background:none;}
+input,select,textarea{outline:none;}
+
+/* ── LOADING ── */
+#loading-screen{position:fixed;inset:0;background:linear-gradient(160deg,#085041,#1D9E75);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;color:#fff;}
+#loading-screen .ls-logo{font-size:52px;margin-bottom:16px;}
+#loading-screen h1{font-size:24px;font-weight:800;margin-bottom:6px;}
+#loading-screen p{font-size:13px;opacity:.8;margin-bottom:28px;}
+.spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ls-status{font-size:12px;opacity:.7;margin-top:12px;}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{position:fixed;inset:0;background:linear-gradient(160deg,#085041,#1D9E75);display:none;align-items:center;justify-content:center;z-index:998;padding:16px;}
+.setup-card{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.setup-card h2{font-size:18px;font-weight:800;margin-bottom:4px;}
+.setup-card .sub{font-size:13px;color:var(--t2);margin-bottom:20px;}
+.step{display:flex;gap:12px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--bdr);}
+.step:last-of-type{border-bottom:none;}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--g);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-body{flex:1;}
+.step-body h3{font-size:13px;font-weight:700;margin-bottom:4px;}
+.step-body p{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:8px;}
+.step-body a{color:var(--b);font-weight:600;}
+.url-input{width:100%;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rads);font-size:13px;background:var(--bg);color:var(--t);margin-top:6px;}
+.setup-btn{width:100%;padding:13px;border-radius:var(--rads);background:var(--g);color:#fff;font-size:14px;font-weight:700;margin-top:14px;}
+.setup-err{font-size:12px;color:var(--r);margin-top:8px;text-align:center;min-height:18px;}
+.code-block{background:#1a1a18;color:#a8ff80;border-radius:var(--rads);padding:10px 12px;font-family:monospace;font-size:11px;margin:6px 0;overflow-x:auto;white-space:pre;}
+
+/* ── PAGES ── */
+.page{display:none;height:100vh;overflow:hidden;flex-direction:column;}
+.page.active{display:flex;}
+
+/* ── LOGIN ── */
+#pg-login{background:linear-gradient(160deg,#085041 0%,#1D9E75 60%,#E1F5EE 100%);align-items:center;justify-content:center;}
+.login-card{background:var(--card);border-radius:16px;padding:32px 28px;width:90%;max-width:340px;box-shadow:0 8px 40px rgba(0,0,0,.18);}
+.login-logo{text-align:center;margin-bottom:22px;}
+.login-logo .li{font-size:38px;display:block;margin-bottom:6px;}
+.login-logo h1{font-size:20px;font-weight:800;}
+.login-logo p{font-size:12px;color:var(--t2);margin-top:2px;}
+.fg{margin-bottom:13px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:4px;letter-spacing:.03em;}
+.fg input,.fg select{width:100%;padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--rads);background:var(--bg);color:var(--t);font-size:13px;}
+.fg input:focus{border-color:var(--g);}
+.login-btn{width:100%;padding:13px;border-radius:var(--rads);background:var(--g);color:#fff;font-size:14px;font-weight:700;margin-top:4px;}
+.login-err{font-size:12px;color:var(--r);text-align:center;margin-top:7px;min-height:17px;}
+.sync-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gd);background:var(--gl);border-radius:8px;padding:5px 10px;margin-top:12px;justify-content:center;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--g);}
+.sync-dot.off{background:var(--t3);}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--card);border-bottom:1px solid var(--bdr);flex-shrink:0;position:sticky;top:0;z-index:100;}
+.tb-logo{font-size:16px;font-weight:800;color:var(--g);margin-right:2px;white-space:nowrap;}
+.tb-tabs{display:flex;gap:3px;flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tb-tabs::-webkit-scrollbar{display:none;}
+.ttab{padding:6px 11px;border-radius:20px;border:1px solid var(--bdr);font-size:12px;font-weight:600;background:transparent;color:var(--t2);white-space:nowrap;}
+.ttab.ab{background:var(--g);border-color:var(--g);color:#fff;}
+.ttab.ap{background:var(--b);border-color:var(--b);color:#fff;}
+.ttab.ax{background:var(--card);border-color:#ccc;color:var(--t);}
+.tb-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.tb-sync{font-size:10px;display:flex;align-items:center;gap:3px;color:var(--t3);}
+.tb-sync-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);}
+.tb-sync-dot.ok{background:var(--g);}
+.tb-sync-dot.syncing{background:var(--a);animation:pulse .8s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.tb-user{font-size:11px;color:var(--t2);}
+.tb-role{font-size:10px;padding:2px 6px;border-radius:8px;font-weight:700;}
+.role-a{background:var(--pul);color:var(--pud);}
+.role-s{background:var(--gl);color:var(--gd);}
+.lo-btn{padding:4px 9px;border-radius:20px;border:1px solid var(--bdr);font-size:11px;color:var(--t2);}
+
+/* ── SCREENS ── */
+.screens{flex:1;overflow:hidden;}
+.scr{display:none;height:100%;overflow:hidden;flex-direction:column;}
+.scr.active{display:flex;}
+.pos-grid{display:grid;grid-template-columns:1fr 285px;flex:1;overflow:hidden;}
+.lp{padding:11px;overflow-y:auto;background:var(--bg);}
+.rp{border-left:1px solid var(--bdr);display:flex;flex-direction:column;background:var(--card);overflow:hidden;}
+.fpg{padding:13px;overflow-y:auto;flex:1;}
+.sl{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin:11px 0 5px;}
+
+/* ── CUSTOMER BAR ── */
+.mbar{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--rads);padding:9px 11px;}
+.mbar input{flex:1;border:none;background:transparent;font-size:13px;color:var(--t);}
+.mbadge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;white-space:nowrap;}
+.bm{background:var(--gl);color:var(--gd);}
+.bw{background:var(--al);color:var(--ad);}
+.bn{background:var(--bg);color:var(--t3);}
+
+/* ── COURTS ── */
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.cbtn{padding:8px 4px;border:1px solid var(--bdr);border-radius:var(--rads);font-size:11px;font-weight:600;background:var(--card);color:var(--t2);text-align:center;}
+.cbtn.sb{background:var(--gl);border-color:var(--g);color:var(--gd);}
+.cbtn.sp{background:var(--bl);border-color:var(--b);color:var(--bd);}
+
+/* ── PRODUCTS ── */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;}
+.pc{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rad);padding:8px;cursor:pointer;transition:transform .1s;user-select:none;}
+.pc:active{transform:scale(.95);}
+.pc-ic{font-size:19px;margin-bottom:3px;}
+.pc-nm{font-size:11px;font-weight:600;color:var(--t);margin-bottom:1px;line-height:1.3;}
+.pc-pr{font-size:11px;color:var(--t2);}
+.pctag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700;margin-top:2px;}
+.tag-r{background:var(--pul);color:var(--pud);}
+.tag-i{background:var(--gl);color:var(--gd);}
+.sinfo{font-size:11px;color:var(--t2);background:var(--card);border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 9px;margin-top:6px;}
+
+/* ── ORDER PANEL ── */
+.rh{padding:10px 12px 8px;border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.rh h3{font-size:13px;font-weight:700;}
+.rh p{font-size:11px;color:var(--t3);margin-top:1px;}
+.ol{flex:1;overflow-y:auto;padding:8px 11px;}
+.oi{display:flex;align-items:center;gap:5px;padding:6px 0;border-bottom:1px solid var(--bdr);}
+.oi:last-child{border-bottom:none;}
+.oi-i{flex:1;min-width:0;}
+.oi-n{font-size:12px;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.oi-s{font-size:10px;color:var(--t3);}
+.qc{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.qb{width:24px;height:24px;border:1px solid var(--bdr);border-radius:5px;background:var(--bg);font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--t);}
+.qn{font-size:12px;font-weight:700;min-width:18px;text-align:center;}
+.oi-p{font-size:12px;font-weight:700;min-width:50px;text-align:right;flex-shrink:0;}
+.eoc{text-align:center;padding:26px 10px;color:var(--t3);font-size:12px;}
+
+/* ── SUMMARY ── */
+.sb2{padding:10px 12px;border-top:1px solid var(--bdr);flex-shrink:0;}
+.sr{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:3px;}
+.st{display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin:8px 0 10px;padding-top:8px;border-top:1px solid var(--bdr);}
+.dpill{font-size:10px;color:var(--gd);background:var(--gl);padding:2px 7px;border-radius:4px;margin-bottom:6px;display:inline-block;}
+.pms{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px;}
+.pm{padding:9px 4px;border:1px solid var(--bdr);border-radius:var(--rads);font-size:11px;font-weight:600;background:var(--card);color:var(--t2);text-align:center;}
+.pm .pmic{font-size:17px;display:block;margin-bottom:2px;}
+.pm.pmc{border-color:var(--a);background:var(--al);color:var(--ad);}
+.pm.pmg{border-color:var(--g);background:var(--gl);color:var(--gd);}
+.pm.pmk{border-color:var(--pu);background:var(--pul);color:var(--pud);}
+.cash-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.cash-row label{font-size:11px;color:var(--t2);white-space:nowrap;}
+.cash-row input{flex:1;font-size:13px;border:1px solid var(--bdr);border-radius:var(--rads);padding:7px 9px;background:var(--bg);color:var(--t);text-align:right;}
+.chg{font-size:12px;font-weight:700;color:var(--gd);background:var(--gl);border-radius:5px;padding:6px 9px;text-align:center;margin-bottom:7px;}
+.gcash-box{background:var(--gl);border:1px solid var(--g);border-radius:var(--rad);padding:10px;margin-bottom:9px;text-align:center;}
+.gcash-box p{font-size:11px;color:var(--gd);margin-bottom:6px;font-weight:700;}
+.gcash-num{font-size:13px;font-weight:700;color:var(--gd);}
+.gcash-amt{font-size:11px;color:var(--gm);}
+.debt-opt{display:flex;align-items:center;gap:7px;padding:7px 9px;background:var(--rl);border:1px solid var(--r);border-radius:var(--rads);margin-bottom:8px;}
+.debt-opt input[type=checkbox]{width:15px;height:15px;accent-color:var(--r);}
+.debt-opt label{font-size:12px;font-weight:600;color:var(--rd);cursor:pointer;}
+.ckbtn{width:100%;padding:12px;border-radius:var(--rad);border:none;font-size:14px;font-weight:700;}
+.ckbtn:disabled{opacity:.35;}
+.ckbad{background:var(--g);color:#fff;}
+.ckpick{background:var(--b);color:#fff;}
+.clr{width:100%;padding:7px;border-radius:var(--rad);border:1px solid var(--bdr);background:transparent;font-size:12px;color:var(--t2);margin-top:5px;}
+
+/* ── FULL PAGE ── */
+.sec{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rad);padding:12px;margin-bottom:10px;}
+.sh{font-size:12px;font-weight:700;color:var(--t2);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.stat-c{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rad);padding:9px;text-align:center;}
+.stat-n{font-size:20px;font-weight:800;}
+.stat-l{font-size:10px;color:var(--t3);margin-top:1px;}
+.filter-row{display:flex;gap:5px;margin-bottom:9px;flex-wrap:wrap;}
+.filt{padding:5px 10px;border-radius:20px;border:1px solid var(--bdr);font-size:11px;background:transparent;color:var(--t2);}
+.filt.fa{background:var(--card);border-color:#888;color:var(--t);font-weight:700;}
+
+/* ── TRACKER ── */
+.tk-row{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--bdr);border-radius:var(--rad);background:var(--card);margin-bottom:7px;}
+.tk-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.tk-info{flex:1;min-width:0;}
+.tk-name{font-size:12px;font-weight:700;}
+.tk-sub{font-size:10px;color:var(--t3);}
+.sp-pill{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap;display:inline-block;}
+.sp-in{background:var(--gl);color:var(--gd);}
+.sp-out{background:#F1EFE8;color:#5F5E5A;}
+.sp-paid{background:var(--gl);color:var(--gd);}
+.sp-unpaid{background:var(--rl);color:var(--rd);}
+.tk-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+.tk-btn{padding:5px 8px;border-radius:6px;border:1px solid var(--bdr);background:transparent;font-size:10px;font-weight:700;color:var(--t2);}
+.tk-btn.up{border-color:var(--r);color:var(--rd);background:var(--rl);}
+.add-pl{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.add-pl input,.add-pl select{font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:7px 9px;background:var(--bg);color:var(--t);}
+.add-pl input{flex:1;min-width:100px;}
+.add-pl button{padding:7px 12px;border-radius:var(--rads);background:var(--b);color:#fff;font-size:12px;font-weight:700;}
+
+/* ── MEMBERS ── */
+.mc-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);}
+.mc-row:last-child{border-bottom:none;}
+.av{width:36px;height:36px;border-radius:50%;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.mc-info{flex:1;min-width:0;}
+.mc-name{font-size:12px;font-weight:700;}
+.mc-sub{font-size:10px;color:var(--t3);}
+.mc-act{display:flex;gap:4px;}
+.ic-btn{width:29px;height:29px;border:1px solid var(--bdr);border-radius:6px;background:transparent;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.ic-btn.del{color:var(--r);border-color:#F09595;}
+.add-form{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px;}
+.add-form input,.add-form select,.add-form textarea{font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:8px 10px;background:var(--bg);color:var(--t);}
+.add-form .full{grid-column:1/-1;}
+.save-btn{width:100%;padding:11px;border-radius:var(--rad);border:none;background:var(--g);color:#fff;font-size:13px;font-weight:700;margin-top:5px;}
+
+/* ── DEBT ── */
+.debt-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rad);padding:12px;margin-bottom:9px;}
+.debt-card.ov{border-color:var(--r);}
+.debt-top{display:flex;align-items:flex-start;gap:9px;margin-bottom:8px;}
+.debt-av{width:36px;height:36px;border-radius:50%;background:var(--rl);color:var(--rd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.debt-name{font-size:13px;font-weight:700;}
+.debt-date{font-size:10px;color:var(--t3);}
+.da-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px;}
+.da-box{background:var(--bg);border-radius:6px;padding:6px 8px;text-align:center;}
+.da-val{font-size:13px;font-weight:700;}
+.da-lbl{font-size:9px;color:var(--t3);margin-top:1px;}
+.debt-bar{height:5px;background:var(--bdr);border-radius:3px;overflow:hidden;margin-bottom:7px;}
+.debt-bar-fill{height:100%;border-radius:3px;transition:width .3s;}
+.debt-actions{display:flex;gap:5px;flex-wrap:wrap;}
+.db{padding:5px 11px;border-radius:6px;border:1px solid var(--bdr);font-size:11px;font-weight:700;background:var(--card);color:var(--t2);}
+.db.pay{border-color:var(--g);color:var(--gd);background:var(--gl);}
+.db.remind{border-color:var(--b);color:var(--bd);background:var(--bl);}
+.db.del{border-color:var(--r);color:var(--rd);}
+
+/* ── SETTINGS ── */
+.edit-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--bdr);}
+.edit-row:last-of-type{border-bottom:none;}
+.edit-row span{flex:1;font-size:12px;}
+.edit-row input[type=number]{width:74px;font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 7px;background:var(--bg);color:var(--t);text-align:right;}
+.del-btn{width:25px;height:25px;background:transparent;border:none;color:var(--t3);font-size:16px;line-height:1;}
+.add-row{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+.add-row input{flex:1;min-width:90px;font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:7px 9px;background:var(--bg);color:var(--t);}
+.add-row button{padding:7px 12px;border-radius:var(--rads);background:var(--g);color:#fff;font-size:16px;font-weight:700;}
+
+/* ── MODAL ── */
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:300;padding:14px;}
+.modal-card{background:var(--card);border-radius:var(--rad);padding:20px;width:100%;max-width:300px;max-height:90vh;overflow-y:auto;}
+.modal-card h3{font-size:15px;font-weight:800;text-align:center;margin-bottom:3px;}
+.msub{font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px;}
+.rl{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;}
+.rdiv{border:none;border-top:1px dashed var(--bdr);margin:8px 0;}
+.rtot{display:flex;justify-content:space-between;font-size:15px;font-weight:800;padding:4px 0;}
+.mbtn{width:100%;padding:11px;border-radius:var(--rad);border:none;font-size:13px;font-weight:700;color:#fff;margin-top:10px;}
+.mbtn2{width:100%;padding:8px;border-radius:var(--rad);border:1px solid var(--bdr);background:transparent;font-size:12px;color:var(--t2);margin-top:5px;}
+.pay-modal{background:var(--card);border-radius:var(--rad);padding:18px;width:100%;max-width:270px;}
+.pay-modal h3{font-size:14px;font-weight:700;margin-bottom:10px;text-align:center;}
+.big-in{width:100%;font-size:26px;font-weight:800;border:2px solid var(--bdr);border-radius:var(--rad);padding:10px;text-align:right;background:var(--bg);color:var(--t);margin-bottom:10px;}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.nk{padding:13px;border-radius:var(--rads);border:1px solid var(--bdr);font-size:17px;font-weight:700;background:var(--card);color:var(--t);}
+.nk.ok{background:var(--g);color:#fff;border-color:var(--g);}
+.nk.clr{background:var(--rl);color:var(--rd);border-color:var(--r);}
+
+/* ── FAB ── */
+.fab{display:none;position:fixed;bottom:16px;right:16px;width:52px;height:52px;border-radius:50%;border:none;font-size:20px;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.22);z-index:140;align-items:center;justify-content:center;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* ── MOBILE ── */
+@media(max-width:560px){
+  .pos-grid{grid-template-columns:1fr;}
+  .rp{display:none;}
+  .rp.ms{display:flex;position:fixed;inset:0;z-index:150;}
+  .fab{display:flex;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="ls-logo">🏸</div>
+  <h1>Court POS</h1>
+  <p>Badminton & Pickleball Management</p>
+  <div class="spinner"></div>
+  <div class="ls-status" id="ls-status">Starting up…</div>
+</div>
+
+<!-- SETUP (first time) -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <h2>🔧 First-time Setup</h2>
+    <p class="sub">Connect Court POS to Google Sheets in 3 steps. Takes about 5 minutes.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Create a Google Sheet</h3>
+        <p>Go to <a href="https://sheets.new" target="_blank">sheets.new</a> and create a blank spreadsheet. Name it <strong>Court POS</strong>.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Add Apps Script</h3>
+        <p>In the sheet, click <strong>Extensions → Apps Script</strong>. Delete everything in the editor. Paste the <strong>Code.gs</strong> file contents (included in your download).</p>
+        <p>Click 💾 Save, then click <strong>Run → setupSheets</strong>. Approve permissions when asked.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Deploy as Web App</h3>
+        <p>Click <strong>Deploy → New deployment</strong>. Select type: <strong>Web app</strong>. Set:</p>
+        <div class="code-block">Execute as: Me
+Who has access: Anyone</div>
+        <p>Click <strong>Deploy</strong>, copy the URL, paste it below:</p>
+        <input class="url-input" type="url" id="setup-url" placeholder="https://script.google.com/macros/s/..."/>
+      </div>
+    </div>
+
+    <button class="setup-btn" onclick="saveSetup()">✓ Connect & start</button>
+    <p class="setup-err" id="setup-err"></p>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="page" id="pg-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="li">🏸</span>
+      <h1>Court POS</h1>
+      <p>Badminton & Pickleball</p>
+    </div>
+    <div class="fg"><label>Username</label><input type="text" id="li-u" placeholder="Username" autocomplete="username"/></div>
+    <div class="fg"><label>Password</label><input type="password" id="li-p" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <p class="login-err" id="li-err"></p>
+    <div class="sync-badge">
+      <div class="sync-dot" id="sync-dot-login"></div>
+      <span id="sync-label-login">Connecting to Google Sheets…</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="page" id="pg-app">
+  <div class="topbar">
+    <span class="tb-logo">🏸 Court POS</span>
+    <div class="tb-tabs">
+      <button class="ttab ab" onclick="gv('bad')" id="t-bad">🏸 Badminton</button>
+      <button class="ttab" onclick="gv('pick')" id="t-pick">🟡 Pickleball</button>
+      <button class="ttab" onclick="gv('tracker')" id="t-tracker">👥 Players</button>
+      <button class="ttab" onclick="gv('members')" id="t-members">🪪 Members</button>
+      <button class="ttab" onclick="gv('debt')" id="t-debt">💳 Debts</button>
+      <button class="ttab admin-only" onclick="gv('settings')" id="t-settings">⚙️ Settings</button>
+      <button class="ttab admin-only" onclick="gv('users')" id="t-users">👤 Users</button>
+    </div>
+    <div class="tb-right">
+      <div class="tb-sync"><div class="tb-sync-dot" id="syncDot"></div><span id="syncLbl">Sync</span></div>
+      <div><div class="tb-user" id="tb-u"></div><div class="tb-role" id="tb-r"></div></div>
+      <button class="lo-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+  <div class="screens">
+    <div class="scr active" id="scr-bad"><div class="pos-grid"><div class="lp" id="lp-bad"></div><div class="rp" id="rp-bad"></div></div></div>
+    <div class="scr" id="scr-pick"><div class="pos-grid"><div class="lp" id="lp-pick"></div><div class="rp" id="rp-pick"></div></div></div>
+    <div class="scr" id="scr-tracker"><div class="fpg" id="fpg-tracker"></div></div>
+    <div class="scr" id="scr-members"><div class="fpg" id="fpg-members"></div></div>
+    <div class="scr" id="scr-debt"><div class="fpg" id="fpg-debt"></div></div>
+    <div class="scr" id="scr-settings"><div class="fpg" id="fpg-settings"></div></div>
+    <div class="scr" id="scr-users"><div class="fpg" id="fpg-users"></div></div>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="toggleMob()">🛒</button>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG — paste your Apps Script URL here after setup
+// ═══════════════════════════════════════════════
+let SCRIPT_URL = localStorage.getItem('cpos_url') || '';
+
+// ═══════════════════════════════════════════════
+// CACHE & STATE
+// ═══════════════════════════════════════════════
+let DB = {
+  config:{gcash:'09XX-XXX-XXXX',gcashAcct:'',discountPremium:0.15,discountRegular:0.10,courts_bad:[],courts_pick:[],products_bad:[],products_pick:[]},
+  members:[], players:[], debts:[], users:[]
+};
+let SESSION = {user:null};
+let ST = {
+  view:'bad',
+  bad:{customer:{name:'',type:'none',memberType:''},order:[],selCourts:[],payMethod:null,cashIn:0,asDebt:false},
+  pick:{customer:{name:'',type:'none',memberType:''},order:[],selCourts:[],payMethod:null,cashIn:0,asDebt:false},
+  tf:'all',editMember:null,editDebt:null,editUser:null,mobOpen:false
+};
+
+// ═══════════════════════════════════════════════
+// GOOGLE SHEETS API
+// ═══════════════════════════════════════════════
+function setSyncState(state){
+  const dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLbl');
+  if(!dot)return;
+  if(state==='ok'){dot.className='tb-sync-dot ok';lbl.textContent='Synced';}
+  else if(state==='syncing'){dot.className='tb-sync-dot syncing';lbl.textContent='Saving…';}
+  else{dot.className='tb-sync-dot';lbl.textContent='Offline';}
+}
+
+async function api(action, body={}) {
+  if(!SCRIPT_URL) throw new Error('No URL configured');
+  setSyncState('syncing');
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method:'POST',
+      body: JSON.stringify({action, ...body}),
+    });
+    const json = await res.json();
+    setSyncState('ok');
+    if(!json.ok) throw new Error(json.error||'API error');
+    return json.data;
+  } catch(e) {
+    setSyncState('offline');
+    throw e;
+  }
+}
+
+async function loadAll() {
+  setStatus('Loading data from Google Sheets…');
+  try {
+    const data = await api('getAll');
+    // Config
+    DB.config = data.config || DB.config;
+    // Parse JSON fields in config
+    ['courts_bad','courts_pick','products_bad','products_pick'].forEach(k=>{
+      if(typeof DB.config[k]==='string') try{DB.config[k]=JSON.parse(DB.config[k]);}catch(e){}
+    });
+    // Apply live labels
+    applyLabels();
+    DB.members = (data.members||[]).map(normalizeRow);
+    DB.players  = (data.players||[]).map(normalizeRow);
+    DB.debts    = (data.debts||[]).map(normalizeRow);
+    DB.users    = data.users||[];
+    // Save locally as cache
+    localStorage.setItem('cpos_cache', JSON.stringify(DB));
+    return true;
+  } catch(e) {
+    // Try cache
+    const cached = localStorage.getItem('cpos_cache');
+    if(cached){ DB = JSON.parse(cached); toast('⚠️ Offline — using cached data'); return true; }
+    return false;
+  }
+}
+
+function normalizeRow(r) {
+  // Convert sheet strings to proper types
+  if(r.paid !== undefined && typeof r.paid === 'string') r.paid = r.paid==='true'||r.paid==='TRUE';
+  if(r.amountPaid !== undefined) r.amountPaid = parseFloat(r.amountPaid)||0;
+  if(r.totalAmount !== undefined) r.totalAmount = parseFloat(r.totalAmount)||0;
+  if(r.remaining !== undefined) r.remaining = parseFloat(r.remaining)||0;
+  return r;
+}
+
+function applyLabels(){
+  const cfg=DB.config;
+  const logo=document.querySelector('.tb-logo');
+  if(logo&&cfg.appName)logo.textContent=cfg.appName;
+  const tBad=document.getElementById('t-bad'),tPick=document.getElementById('t-pick');
+  if(tBad&&cfg.label_bad)tBad.textContent=cfg.label_bad;
+  if(tPick&&cfg.label_pick)tPick.textContent=cfg.label_pick;
+  // Update login subtitle too
+  const li=document.querySelector('.login-logo p');
+  if(li&&cfg.appName)li.textContent=cfg.appName;
+}
+
+// ═══════════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════════
+async function saveSetup() {
+  const url = document.getElementById('setup-url').value.trim();
+  const err = document.getElementById('setup-err');
+  err.textContent = '';
+  if(!url.includes('script.google.com')){err.textContent='Please paste a valid Apps Script URL';return;}
+  document.querySelector('.setup-btn').textContent = 'Testing connection…';
+  SCRIPT_URL = url;
+  try {
+    await api('getAll');
+    localStorage.setItem('cpos_url', url);
+    document.getElementById('setup-screen').style.display='none';
+    init();
+  } catch(e) {
+    err.textContent = 'Could not connect: '+e.message+'. Check your URL and deployment settings.';
+    document.querySelector('.setup-btn').textContent = '✓ Connect & start';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function setStatus(s){const el=document.getElementById('ls-status');if(el)el.textContent=s;}
+
+async function init() {
+  document.getElementById('loading-screen').style.display='flex';
+  document.getElementById('setup-screen').style.display='none';
+
+  if(!SCRIPT_URL) {
+    document.getElementById('loading-screen').style.display='none';
+    document.getElementById('setup-screen').style.display='flex';
+    return;
+  }
+
+  const ok = await loadAll();
+  document.getElementById('loading-screen').style.display='none';
+
+  if(ok) {
+    document.getElementById('pg-login').classList.add('active');
+    // Update sync badge on login page
+    const d=document.getElementById('sync-dot-login'),l=document.getElementById('sync-label-login');
+    if(d){d.className='sync-dot';d.style.background='var(--g)';}
+    if(l)l.textContent='Connected to Google Sheets ✓';
+  } else {
+    document.getElementById('setup-screen').style.display='flex';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+function doLogin() {
+  const u=document.getElementById('li-u').value.trim();
+  const p=document.getElementById('li-p').value;
+  // Check against DB users (loaded from sheet)
+  const user = DB.users.find(x=>x.username===u&&x.password===p&&x.active!=='false');
+  // Fallback default if sheet users not loaded yet
+  const defaults = [{username:'admin',password:'admin123',role:'admin',name:'Admin'},{username:'staff',password:'staff123',role:'staff',name:'Staff 1'}];
+  const matched = user || defaults.find(x=>x.username===u&&x.password===p);
+  if(!matched){document.getElementById('li-err').textContent='Incorrect username or password';return;}
+  SESSION.user = matched;
+  document.getElementById('li-err').textContent='';
+  document.getElementById('li-u').value='';
+  document.getElementById('li-p').value='';
+  document.getElementById('pg-login').classList.remove('active');
+  document.getElementById('pg-app').classList.add('active');
+  document.getElementById('tb-u').textContent=matched.name;
+  document.getElementById('tb-r').textContent=matched.role==='admin'?'Admin':'Staff';
+  document.getElementById('tb-r').className='tb-role '+(matched.role==='admin'?'role-a':'role-s');
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display=matched.role==='admin'?'':'none');
+  gv('bad');
+  // Auto-refresh every 30 seconds
+  setInterval(async()=>{
+    await loadAll();
+    if(ST.view==='tracker')renderTracker();
+    if(ST.view==='debt')renderDebt();
+  }, 30000);
+}
+
+function doLogout(){
+  SESSION.user=null;
+  document.getElementById('pg-app').classList.remove('active');
+  document.getElementById('pg-login').classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+const fmt=n=>'₱'+parseFloat(n).toFixed(2);
+const uid=()=>Date.now().toString(36)+(Math.random()*999|0);
+const ini=n=>(n||'?').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function gv(v){
+  ST.view=v;
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ttab').forEach(t=>{const a=t.classList.contains('admin-only');t.className='ttab'+(a?' admin-only':'');});
+  if(SESSION.user?.role==='admin')document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+  const isSport=v==='bad'||v==='pick';
+  document.getElementById('scr-'+v).classList.add('active');
+  if(v==='bad')document.getElementById('t-bad').className='ttab ab';
+  else if(v==='pick')document.getElementById('t-pick').className='ttab ap';
+  else document.getElementById('t-'+v).className='ttab ax';
+  document.getElementById('fab').style.display=isSport?'flex':'none';
+  document.querySelectorAll('.rp').forEach(r=>r.classList.remove('ms'));
+  ST.mobOpen=false;updateFab();
+  if(isSport){renderLeft(v);renderRight(v);}
+  else if(v==='tracker')renderTracker();
+  else if(v==='members')renderMembers();
+  else if(v==='debt')renderDebt();
+  else if(v==='settings')renderSettings();
+  else if(v==='users')renderUsers();
+}
+
+function toggleMob(){
+  ST.mobOpen=!ST.mobOpen;
+  document.getElementById('rp-'+ST.view).classList.toggle('ms',ST.mobOpen);
+  updateFab();
+}
+function updateFab(){
+  const fab=document.getElementById('fab');
+  const sp=ST.view==='bad'||ST.view==='pick'?ST.view:null;
+  if(!sp)return;
+  const n=ST[sp].order.length;
+  fab.textContent=ST.mobOpen?'✕':'🛒';
+  fab.style.background=ST.mobOpen?'#888':(sp==='bad'?'var(--g)':'var(--b)');
+  if(n>0&&!ST.mobOpen)fab.innerHTML=`🛒<span style="position:absolute;top:4px;right:4px;background:var(--r);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;">${n}</span>`;
+}
+
+// ═══════════════════════════════════════════════
+// POS LEFT
+// ═══════════════════════════════════════════════
+function getCourts(sp){return DB.config['courts_'+sp]||[];}
+function getProds(sp){return DB.config['products_'+sp]||[];}
+
+function renderLeft(sp){
+  const s=ST[sp],isBad=sp==='bad';
+  const courts=getCourts(sp),prods=getProds(sp);
+  let shutt=0;s.order.forEach(o=>{if(o.isShuttle)shutt+=o.qty*(o.sQty||1);});
+  const cfg=DB.config;
+  const lEntry    = cfg.label_entry    || '🏟️ Entry Fee — Court';
+  const lProducts = cfg.label_products || '📦 Products (Inventory)';
+  const lRentals  = cfg.label_rentals  || '🎾 Rentals / Non-Inventory';
+  document.getElementById('lp-'+sp).innerHTML=`
+  <div class="sl">👤 Player Name</div>
+  <div class="mbar">
+    <input type="text" placeholder="Name or member ID…" oninput="lookupM(this.value,'${sp}')" value="${s.customer.name||''}"/>
+    <span class="mbadge ${s.customer.type==='member'?'bm':s.customer.type==='walkin'?'bw':'bn'}">${s.customer.type==='member'?'★ Member':s.customer.type==='walkin'?'Walk-in':'—'}</span>
+  </div>
+  <div class="sl">${lEntry}</div>
+  <div class="cgrid">${courts.map(c=>{const sel=s.selCourts.includes(c.id);return`<div class="cbtn ${sel?(isBad?'sb':'sp'):''}" onclick="togCourt('${c.id}','${sp}')">${c.name}<br><span style="font-size:10px;font-weight:400;">${fmt(c.price)}/${c.unit}</span></div>`;}).join('')}</div>
+  <div class="sl">${lProducts}</div>
+  <div class="pgrid">${prods.filter(p=>p.type==='inventory').map(p=>`<div class="pc" onclick="addP('${p.id}','${sp}')"><div class="pc-ic">${p.icon}</div><div class="pc-nm">${p.name}</div><div class="pc-pr">${fmt(p.price)}</div>${p.note?`<div style="font-size:10px;color:var(--t3);">${p.note}</div>`:''}<span class="pctag tag-i">Inventory</span></div>`).join('')}</div>
+  <div class="sl">${lRentals}</div>
+  <div class="pgrid">${prods.filter(p=>p.type==='rental').map(p=>`<div class="pc" onclick="addP('${p.id}','${sp}')"><div class="pc-ic">${p.icon}</div><div class="pc-nm">${p.name}</div><div class="pc-pr">${fmt(p.price)}</div>${p.note?`<div style="font-size:10px;color:var(--t3);">${p.note}</div>`:''}<span class="pctag tag-r">Rental</span></div>`).join('')}</div>
+  ${shutt>0?`<div class="sinfo">🏸 Total shuttlecocks: <strong>${shutt} pcs</strong></div>`:''}`;
+}
+
+function lookupM(val,sp){
+  const s=ST[sp];
+  if(!val.trim()){s.customer={name:'',type:'none',memberType:''};renderRight(sp);return;}
+  const f=DB.members.find(m=>String(m.id||'').toLowerCase()===val.toLowerCase()||String(m.name||'').toLowerCase().includes(val.toLowerCase()));
+  s.customer=f?{name:f.name,type:'member',memberType:f.type}:{name:val,type:'walkin',memberType:''};
+  renderRight(sp);updateFab();
+}
+
+function togCourt(id,sp){
+  const s=ST[sp],courts=getCourts(sp),c=courts.find(x=>x.id===id),i=s.selCourts.indexOf(id);
+  if(i>-1){s.selCourts.splice(i,1);s.order=s.order.filter(o=>o.courtId!==id);}
+  else{s.selCourts.push(id);s.order.push({uid:uid(),courtId:id,name:c.name+' Entry Fee',price:parseFloat(c.price),qty:1,isCourt:true,category:'entry'});}
+  renderLeft(sp);renderRight(sp);updateFab();
+}
+
+function addP(pid,sp){
+  const prods=getProds(sp),p=prods.find(x=>x.id===pid);
+  if(!p)return;
+  const s=ST[sp],ex=s.order.find(o=>o.pid===pid);
+  if(ex)ex.qty++;
+  else s.order.push({uid:uid(),pid,name:p.name,price:parseFloat(p.price),qty:1,isShuttle:p.isShuttle||false,sQty:p.sQty||1,category:p.type==='rental'?'rental':'product'});
+  renderRight(sp);updateFab();toast(p.name+' added ✓');
+}
+
+function chgQty(i,d,sp){
+  const s=ST[sp];s.order[i].qty+=d;
+  if(s.order[i].qty<=0){const o=s.order[i];if(o.courtId)s.selCourts=s.selCourts.filter(x=>x!==o.courtId);s.order.splice(i,1);}
+  renderLeft(sp);renderRight(sp);updateFab();
+}
+
+function calcT(sp){
+  const s=ST[sp];let sub=0,entryTotal=0,prodTotal=0,rentalTotal=0;
+  s.order.forEach(o=>{const a=o.price*o.qty;sub+=a;if(o.category==='entry')entryTotal+=a;else if(o.category==='rental')rentalTotal+=a;else prodTotal+=a;});
+  const isM=s.customer.type==='member';
+  const discRate=isM?(s.customer.memberType==='premium'?parseFloat(DB.config.discountPremium||0.15):parseFloat(DB.config.discountRegular||0.10)):0;
+  const disc=isM?sub*discRate:0;
+  return{sub,disc,total:sub-disc,isM,discRate,entryTotal,prodTotal,rentalTotal};
+}
+
+// ═══════════════════════════════════════════════
+// POS RIGHT
+// ═══════════════════════════════════════════════
+function renderRight(sp){
+  const s=ST[sp],{sub,disc,total,isM,discRate,entryTotal,prodTotal,rentalTotal}=calcT(sp),isBad=sp==='bad';
+  let shutt=0;s.order.forEach(o=>{if(o.isShuttle)shutt+=o.qty*(o.sQty||1);});
+  const cats=[{k:'entry',lbl:'Entry Fees'},{k:'product',lbl:'Products'},{k:'rental',lbl:'Rentals'}];
+  let orderHtml=s.order.length===0?`<div class="eoc"><div style="font-size:30px;margin-bottom:7px;">🛒</div>Add player & items</div>`:
+    cats.map(c=>{const its=s.order.filter(o=>o.category===c.k);return its.length===0?'':
+      `<div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;padding:4px 0 2px;">${c.lbl}</div>`+
+      its.map((o)=>{const idx=s.order.indexOf(o);return`<div class="oi"><div class="oi-i"><div class="oi-n">${o.name}</div>${o.isShuttle?`<div class="oi-s">${o.qty*(o.sQty||1)} pcs</div>`:''}</div><div class="qc"><button class="qb" onclick="chgQty(${idx},-1,'${sp}')">−</button><span class="qn">${o.qty}</span><button class="qb" onclick="chgQty(${idx},+1,'${sp}')">+</button></div><div class="oi-p">${fmt(o.price*o.qty)}</div></div>`}).join('');
+    }).join('');
+
+  let payExtra='';
+  if(s.order.length>0){
+    if(s.payMethod==='cash'){const chg=Math.max(0,(s.cashIn||0)-total);payExtra=`<div class="cash-row"><label>Cash received</label><input type="number" value="${s.cashIn||''}" placeholder="0.00" min="0" step="10" oninput="ST['${sp}'].cashIn=parseFloat(this.value)||0;renderRight('${sp}');"/></div>${s.cashIn>=total&&s.cashIn>0?`<div class="chg">Change: ${fmt(chg)}</div>`:''}`;
+    }else if(s.payMethod==='gcash'){payExtra=`<div class="gcash-box"><p>📱 Scan to pay via GCash</p><div style="background:#fff;width:90px;height:90px;margin:0 auto 6px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gd);font-weight:700;text-align:center;padding:4px;">${DB.config.gcash||'?'}</div><div class="gcash-num">${DB.config.gcash||''}</div><div class="gcash-amt">Amount: ${fmt(total)}</div></div>`;}
+  }
+  const canChk=s.order.length>0&&(s.asDebt||(!!s.payMethod&&(s.payMethod!=='cash'||(s.cashIn>=total&&s.cashIn>0))));
+  document.getElementById('rp-'+sp).innerHTML=`
+  <div class="rh"><h3>${s.customer.name||'No player selected'}</h3><p>${s.order.length} item(s) · ${fmt(total)}</p></div>
+  <div class="ol">${orderHtml}</div>
+  <div class="sb2">
+    ${entryTotal>0?`<div class="sr"><span>Entry fees</span><span>${fmt(entryTotal)}</span></div>`:''}
+    ${prodTotal>0?`<div class="sr"><span>Products</span><span>${fmt(prodTotal)}</span></div>`:''}
+    ${rentalTotal>0?`<div class="sr"><span>Rentals</span><span>${fmt(rentalTotal)}</span></div>`:''}
+    ${isM&&disc>0?`<div class="sr"><span>${s.customer.memberType==='premium'?'Premium':'Regular'} discount (${(discRate*100).toFixed(0)}%)</span><span style="color:var(--g);">−${fmt(disc)}</span></div><span class="dpill">★ Member rate</span>`:''}
+    <div class="st"><span>Total</span><span>${fmt(total)}</span></div>
+    <div class="debt-opt"><input type="checkbox" id="dbt_${sp}" ${s.asDebt?'checked':''} onchange="ST['${sp}'].asDebt=this.checked;renderRight('${sp}');"/><label for="dbt_${sp}">💳 Record as Debt (pay later)</label></div>
+    ${!s.asDebt?`<div class="pms">
+      <div class="pm ${s.payMethod==='cash'?'pmc':''}" onclick="selPay('cash','${sp}')"><span class="pmic">💵</span>Cash</div>
+      <div class="pm ${s.payMethod==='gcash'?'pmg':''}" onclick="selPay('gcash','${sp}')"><span class="pmic">📱</span>GCash</div>
+      <div class="pm ${s.payMethod==='card'?'pmk':''}" onclick="selPay('card','${sp}')"><span class="pmic">💳</span>Card</div>
+    </div>${payExtra}`:''}
+    <button class="ckbtn ${isBad?'ckbad':'ckpick'}" onclick="checkout('${sp}')" ${canChk?'':'disabled'}>${s.asDebt?'💳 Record as Debt':'🧾 Checkout'}</button>
+    <button class="clr" onclick="clearOrd('${sp}')">Clear order</button>
+  </div>`;
+}
+
+function selPay(m,sp){const s=ST[sp];s.payMethod=s.payMethod===m?null:m;s.cashIn=0;renderRight(sp);}
+function clearOrd(sp){const s=ST[sp];s.order=[];s.selCourts=[];s.payMethod=null;s.cashIn=0;s.asDebt=false;renderLeft(sp);renderRight(sp);updateFab();}
+
+// ═══════════════════════════════════════════════
+// CHECKOUT
+// ═══════════════════════════════════════════════
+async function checkout(sp){
+  const s=ST[sp],{sub,disc,total,isM,discRate,entryTotal,prodTotal,rentalTotal}=calcT(sp),isBad=sp==='bad';
+  let shutt=0;s.order.forEach(o=>{if(o.isShuttle)shutt+=o.qty*(o.sQty||1);});
+  const now=new Date(),nowStr=now.toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'});
+  const txn='TXN-'+Date.now().toString(36).toUpperCase();
+  const cust=s.customer.name||'Walk-in Guest';
+  const items=[...s.order];
+
+  if(s.asDebt){
+    try{
+      await api('saveDebt',{name:cust,phone:'',amount:total,paid:0,date:now.toISOString().split('T')[0],note:`${isBad?'🏸 Badminton':'🟡 Pickleball'} — ${txn}`});
+      DB.debts.push({id:'D'+uid(),name:cust,phone:'',totalAmount:total,amountPaid:0,remaining:total,dateAdded:now.toISOString().split('T')[0],note:`${isBad?'Badminton':'Pickleball'} — ${txn}`,status:'active'});
+      toast(`💳 ${cust} — ${fmt(total)} added to debts ✓`);
+    }catch(e){toast('⚠️ Saved locally — will sync when online');}
+    clearOrd(sp);return;
+  }
+
+  const payL={cash:'Cash',gcash:'GCash',card:'Card'};
+  const chg=s.payMethod==='cash'?Math.max(0,s.cashIn-total):0;
+
+  // Save to Google Sheets
+  try{
+    await api('saveSale',{txn,sport:sp,playerName:cust,memberType:s.customer.memberType||'walkin',payMethod:s.payMethod,subtotal:sub,discount:disc,total,items,entryFees:entryTotal,products:prodTotal,rentals:rentalTotal,shuttles:shutt,recordedBy:SESSION.user?.name||'staff'});
+  }catch(e){toast('⚠️ Receipt saved locally only');}
+
+  const modal=document.createElement('div');
+  modal.className='modal-wrap';
+  modal.innerHTML=`<div class="modal-card">
+    <div style="text-align:center;font-size:22px;margin-bottom:3px;">${isBad?'🏸':'🟡'}</div>
+    <h3>${isBad?'Badminton':'Pickleball'} Receipt</h3>
+    <p class="msub">${nowStr} · ${txn}</p>
+    ${items.filter(o=>o.category==='entry').length>0?`<div style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;">Entry Fees</div>`:''}
+    ${items.filter(o=>o.category==='entry').map(o=>`<div class="rl"><span>${o.name} ×${o.qty}</span><span>${fmt(o.price*o.qty)}</span></div>`).join('')}
+    ${items.filter(o=>o.category==='product').length>0?`<div style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;margin-top:4px;">Products</div>`:''}
+    ${items.filter(o=>o.category==='product').map(o=>`<div class="rl"><span>${o.name} ×${o.qty}${o.isShuttle?' ('+o.qty*(o.sQty||1)+'pcs)':''}</span><span>${fmt(o.price*o.qty)}</span></div>`).join('')}
+    ${items.filter(o=>o.category==='rental').length>0?`<div style="font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;margin-top:4px;">Rentals</div>`:''}
+    ${items.filter(o=>o.category==='rental').map(o=>`<div class="rl"><span>${o.name} ×${o.qty}</span><span>${fmt(o.price*o.qty)}</span></div>`).join('')}
+    ${shutt>0?`<div style="font-size:10px;color:var(--t3);padding:2px 0;">🏸 ${shutt} shuttlecocks</div>`:''}
+    <hr class="rdiv">
+    <div class="rl"><span>Subtotal</span><span>${fmt(sub)}</span></div>
+    ${isM&&disc>0?`<div class="rl" style="color:var(--g);"><span>Discount (${(discRate*100).toFixed(0)}%)</span><span>−${fmt(disc)}</span></div>`:''}
+    <div class="rtot"><span>TOTAL</span><span>${fmt(total)}</span></div>
+    <hr class="rdiv">
+    <div class="rl"><span>Payment</span><span>${payL[s.payMethod]}</span></div>
+    ${s.payMethod==='cash'?`<div class="rl"><span>Cash</span><span>${fmt(s.cashIn)}</span></div><div class="rl" style="color:var(--g);font-weight:700;"><span>Change</span><span>${fmt(chg)}</span></div>`:''}
+    <div style="font-size:10px;color:var(--t3);text-align:center;margin-top:5px;">${isM?'★ Member: ':''}${cust}</div>
+    <div style="font-size:10px;color:var(--gd);text-align:center;background:var(--gl);border-radius:5px;padding:4px;margin-top:6px;">✓ Saved to Google Sheets</div>
+    <button class="mbtn" style="background:${isBad?'var(--g)':'var(--b)'};" onclick="doPrint(this)">🖨️ Print receipt</button>
+    <button class="mbtn2" onclick="newOrd('${sp}')">✓ New order</button>
+  </div>`;
+  document.body.appendChild(modal);
+  // Store receipt data on button for printing
+  modal.querySelector('.mbtn').dataset.receipt = JSON.stringify({txn,nowStr,items,sub,disc,total,pay:s.payMethod,cash:s.cashIn,chg,isBad,cust,isM,discRate,shutt});
+}
+
+function doPrint(btn){
+  const d=JSON.parse(btn.dataset.receipt);
+  const pL={cash:'Cash',gcash:'GCash',card:'Card'};
+  const w=window.open('','_blank','width=380,height=680');
+  if(!w){toast('Allow popups to print');return;}
+  const cats=[{k:'entry',l:'Entry Fees'},{k:'product',l:'Products'},{k:'rental',l:'Rentals'}];
+  let rows='';
+  cats.forEach(c=>{const its=d.items.filter(o=>o.category===c.k);if(its.length){rows+=`<tr><td colspan="2" style="font-size:10px;color:#999;font-weight:700;text-transform:uppercase;padding-top:8px;">${c.l}</td></tr>`;rows+=its.map(o=>`<tr><td>${o.name}${o.isShuttle?' ('+o.qty*(o.sQty||1)+'pcs)':''} ×${o.qty}</td><td align="right">₱${(o.price*o.qty).toFixed(2)}</td></tr>`).join('');}});
+  w.document.write(`<!DOCTYPE html><html><head><title>Receipt</title><style>body{font-family:monospace;font-size:13px;padding:18px;width:300px;margin:0 auto;}h2{text-align:center;}p{text-align:center;color:#666;margin:3px 0;}table{width:100%;}td{padding:2px 0;}hr{border:none;border-top:1px dashed #ccc;margin:9px 0;}.tot{font-weight:bold;font-size:15px;}.disc{color:green;}.foot{text-align:center;margin-top:14px;font-size:12px;color:#888;}</style></head><body>
+  <h2>${d.isBad?'🏸 Badminton':'🟡 Pickleball'} Court POS</h2>
+  <p>${d.nowStr}</p><p>Txn: ${d.txn}</p><p>${d.cust}${d.isM?' (Member)':''}</p>
+  <hr><table>${rows}</table>
+  ${d.shutt>0?`<p style="font-size:11px;color:#888;">🏸 ${d.shutt} shuttlecocks</p>`:''}
+  <hr><table><tr><td>Subtotal</td><td align="right">₱${parseFloat(d.sub).toFixed(2)}</td></tr>${d.isM&&d.disc>0?`<tr class="disc"><td>Discount (${(d.discRate*100).toFixed(0)}%)</td><td align="right">−₱${parseFloat(d.disc).toFixed(2)}</td></tr>`:''}<tr class="tot"><td>TOTAL</td><td align="right">₱${parseFloat(d.total).toFixed(2)}</td></tr></table>
+  <hr><table><tr><td>Payment</td><td align="right">${pL[d.pay]||d.pay}</td></tr>${d.pay==='cash'?`<tr><td>Cash</td><td align="right">₱${parseFloat(d.cash).toFixed(2)}</td></tr><tr><td>Change</td><td align="right">₱${parseFloat(d.chg).toFixed(2)}</td></tr>`:''}</table>
+  <p class="foot">Thank you for playing! 🏸🟡</p>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js')
+      .then(()=>console.log('SW registered'))
+      .catch(e=>console.log('SW error',e));
+  });
+}
+</script>
+</body></html>`);
+  w.document.close();w.print();
+}
+
+function newOrd(sp){
+  document.querySelectorAll('.modal-wrap').forEach(m=>m.remove());
+  clearOrd(sp);ST[sp].customer={name:'',type:'none',memberType:''};
+  renderLeft(sp);renderRight(sp);updateFab();
+  document.querySelectorAll('.rp').forEach(r=>r.classList.remove('ms'));
+  ST.mobOpen=false;updateFab();
+}
+
+// ═══════════════════════════════════════════════
+// PLAYER TRACKER
+// ═══════════════════════════════════════════════
+function renderTracker(){
+  const f=ST.tf,pl=DB.players;
+  const fmap={all:pl,in:pl.filter(p=>p.status==='in'),out:pl.filter(p=>p.status==='out'),unpaid:pl.filter(p=>!p.paid&&p.status==='in'),bad:pl.filter(p=>p.sport==='bad'),pick:pl.filter(p=>p.sport==='pick')};
+  const filtered=fmap[f]||pl;
+  const ins=pl.filter(p=>p.status==='in').length,outs=pl.filter(p=>p.status==='out').length;
+  const paid=pl.filter(p=>p.paid&&p.status==='in').length,unpaid=pl.filter(p=>!p.paid&&p.status==='in').length;
+  document.getElementById('fpg-tracker').innerHTML=`
+  <h4 style="font-size:15px;font-weight:800;margin-bottom:12px;">👥 Player Tracker <span style="font-size:11px;color:var(--t3);font-weight:400;">— auto-refreshes every 30s</span></h4>
+  <div class="stats-row">
+    <div class="stat-c"><div class="stat-n" style="color:var(--g);">${ins}</div><div class="stat-l">Inside</div></div>
+    <div class="stat-c"><div class="stat-n" style="color:#888;">${outs}</div><div class="stat-l">Out</div></div>
+    <div class="stat-c"><div class="stat-n" style="color:var(--g);">${paid}</div><div class="stat-l">Paid</div></div>
+    <div class="stat-c"><div class="stat-n" style="color:var(--r);">${unpaid}</div><div class="stat-l">Unpaid</div></div>
+  </div>
+  <div class="filter-row">${['all','in','out','unpaid','bad','pick'].map(x=>`<button class="filt ${f===x?'fa':''}" onclick="setFilt('${x}')">${x==='all'?'All':x==='in'?'Inside':x==='out'?'Out':x==='unpaid'?'⚠ Unpaid':x==='bad'?'🏸':'🟡'}</button>`).join('')}
+  <button class="filt" onclick="loadAll().then(renderTracker)" style="margin-left:auto;">🔄 Refresh</button></div>
+  ${filtered.length===0?`<div style="text-align:center;padding:24px;color:var(--t3);font-size:13px;">No players</div>`:''}
+  ${filtered.map(p=>{
+    const avBg=p.type==='member'?'var(--gl)':'var(--al)',avTx=p.type==='member'?'var(--gd)':'var(--ad)';
+    return `<div class="tk-row">
+      <div class="tk-av" style="background:${avBg};color:${avTx};">${ini(p.name)}</div>
+      <div class="tk-info"><div class="tk-name">${p.name}</div><div class="tk-sub">${p.sport==='bad'?'🏸':'🟡'} ${p.courtName} · ${p.entryTime||''}${p.type==='member'?' · ★':''}</div></div>
+      <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end;">
+        <span class="sp-pill ${p.status==='in'?'sp-in':'sp-out'}">${p.status==='in'?'Inside':'Out'}</span>
+        <span class="sp-pill ${p.paid?'sp-paid':'sp-unpaid'}">${p.paid?'Paid':'Unpaid'}</span>
+      </div>
+      <div class="tk-actions">
+        <button class="tk-btn" onclick="togStat('${p.id}')">${p.status==='in'?'Check out':'Check in'}</button>
+        <button class="tk-btn ${p.paid?'':'up'}" onclick="togPaid('${p.id}')">${p.paid?'Mark unpaid':'Mark paid'}</button>
+      </div>
+    </div>`;
+  }).join('')}
+  <div class="sec" style="margin-top:10px;"><div class="sh">➕ Add player</div>
+  <div class="add-pl">
+    <input type="text" id="plN" placeholder="Name or member ID"/>
+    <select id="plS" onchange="updCS()"><option value="bad">🏸 Badminton</option><option value="pick">🟡 Pickleball</option></select>
+    <select id="plC">${getCourts('bad').map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
+    <button onclick="addPl()">+ Add</button>
+  </div></div>`;
+}
+
+function updCS(){const sp=document.getElementById('plS').value,sel=document.getElementById('plC');if(sel)sel.innerHTML=getCourts(sp).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');}
+function setFilt(f){ST.tf=f;renderTracker();}
+
+async function togStat(id){
+  const p=DB.players.find(x=>x.id===id);if(!p)return;
+  const newSt=p.status==='in'?'out':'in';
+  p.status=newSt;
+  try{await api('updatePlayer',{id,updates:{status:newSt,exitTime:newSt==='out'?new Date().toISOString():''}});}catch(e){toast('⚠️ Could not sync');}
+  renderTracker();
+}
+
+async function togPaid(id){
+  const p=DB.players.find(x=>x.id===id);if(!p)return;
+  p.paid=!p.paid;
+  try{await api('updatePlayer',{id,updates:{paid:String(p.paid)}});}catch(e){toast('⚠️ Could not sync');}
+  renderTracker();
+}
+
+async function addPl(){
+  const nEl=document.getElementById('plN'),sp=document.getElementById('plS').value,cid=document.getElementById('plC').value,name=nEl.value.trim();
+  if(!name){toast('Enter a name');return;}
+  const mem=DB.members.find(m=>String(m.id||'').toLowerCase()===name.toLowerCase()||String(m.name||'').toLowerCase().includes(name.toLowerCase()));
+  const court=getCourts(sp).find(c=>c.id===cid);
+  const entry={id:'PL'+uid(),name:mem?mem.name:name,sport:sp,courtName:court?court.name:'—',status:'in',paid:false,entryTime:new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}),type:mem?'member':'walkin'};
+  DB.players.push(entry);
+  try{await api('savePlayer',entry);}catch(e){toast('⚠️ Saved locally only');}
+  nEl.value='';renderTracker();toast((mem?mem.name:name)+' added ✓');
+}
+
+// ═══════════════════════════════════════════════
+// MEMBERS
+// ═══════════════════════════════════════════════
+function renderMembers(){
+  const em=ST.editMember;
+  document.getElementById('fpg-members').innerHTML=`
+  <h4 style="font-size:15px;font-weight:800;margin-bottom:12px;">🪪 Members</h4>
+  <div class="sec">
+    <div class="sh"><span>${DB.members.length} members</span><div style="display:flex;gap:5px;"><span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--al);color:var(--ad);font-weight:700;">Premium 15%</span><span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--gl);color:var(--gd);font-weight:700;">Regular 10%</span></div></div>
+    ${DB.members.map(m=>`<div class="mc-row">
+      <div class="av">${ini(m.name)}</div>
+      <div class="mc-info"><div class="mc-name">${m.name}</div><div class="mc-sub">${m.id} · 📞 ${m.phone||'—'} · <span style="font-weight:700;">${m.type||'regular'}</span> · ${m.sport||'—'}</div></div>
+      <div class="mc-act"><button class="ic-btn" onclick="editMem('${m.id}')">✏️</button><button class="ic-btn del" onclick="delMem('${m.id}')">🗑️</button></div>
+    </div>`).join('')}
+  </div>
+  <div class="sec">
+    <div class="sh">${em?'✏️ Edit':'➕ Add member'}</div>
+    <div class="add-form">
+      <input type="text" id="mfN" placeholder="Full name" value="${em?em.name:''}"/>
+      <input type="text" id="mfP" placeholder="Phone" value="${em?em.phone:''}"/>
+      <input type="text" id="mfI" placeholder="Member ID (e.g. M004)" class="full" value="${em?em.id:''}" ${em?'readonly':''}/>
+      <select id="mfT"><option value="regular" ${em?.type==='regular'?'selected':''}>Regular (10%)</option><option value="premium" ${em?.type==='premium'?'selected':''}>⭐ Premium (15%)</option></select>
+      <select id="mfS"><option value="badminton" ${em?.sport==='badminton'?'selected':''}>🏸 Badminton</option><option value="pickleball" ${em?.sport==='pickleball'?'selected':''}>🟡 Pickleball</option><option value="both" ${!em||em.sport==='both'?'selected':''}>Both</option></select>
+    </div>
+    <button class="save-btn" onclick="saveMem()">${em?'Save changes':'Register member'}</button>
+    ${em?`<button class="clr" onclick="ST.editMember=null;renderMembers()">Cancel</button>`:''}
+  </div>`;
+}
+
+function editMem(id){ST.editMember=DB.members.find(m=>m.id===id);renderMembers();document.getElementById('fpg-members').scrollTop=9999;}
+
+async function delMem(id){
+  if(!confirm('Delete this member?'))return;
+  DB.members=DB.members.filter(m=>m.id!==id);
+  if(ST.editMember?.id===id)ST.editMember=null;
+  try{await api('deleteMember',{id});}catch(e){toast('⚠️ Could not sync');}
+  renderMembers();toast('Member deleted');
+}
+
+async function saveMem(){
+  const n=document.getElementById('mfN').value.trim(),ph=document.getElementById('mfP').value.trim(),id=document.getElementById('mfI').value.trim(),type=document.getElementById('mfT').value,sport=document.getElementById('mfS').value;
+  if(!n||!id){toast('Name and ID required');return;}
+  if(ST.editMember){
+    const m=DB.members.find(x=>x.id===ST.editMember.id);
+    if(m){m.name=n;m.phone=ph;m.type=type;m.sport=sport;}
+    try{await api('updateMember',{id:ST.editMember.id,updates:{name:n,phone:ph,type,sport}});}catch(e){toast('⚠️ Could not sync');}
+    ST.editMember=null;toast('Member updated ✓');
+  }else{
+    if(DB.members.find(m=>m.id===id)){toast('ID already exists');return;}
+    const entry={id,name:n,phone:ph,type,sport,joined:new Date().toISOString().split('T')[0]};
+    DB.members.push(entry);
+    try{await api('saveMember',entry);}catch(e){toast('⚠️ Saved locally only');}
+    toast(n+' registered ✓');
+  }
+  renderMembers();
+}
+
+// ═══════════════════════════════════════════════
+// DEBT TRACKER
+// ═══════════════════════════════════════════════
+function renderDebt(){
+  const debts=DB.debts.filter(d=>d.status==='active');
+  const totalOwed=debts.reduce((a,d)=>a+(parseFloat(d.remaining||d.totalAmount||0)),0);
+  const overdue=debts.filter(d=>{const days=(new Date()-new Date(d.dateAdded||d.date))/(86400000);return days>7&&parseFloat(d.remaining||0)>0;});
+  document.getElementById('fpg-debt').innerHTML=`
+  <h4 style="font-size:15px;font-weight:800;margin-bottom:12px;">💳 Debt Tracker</h4>
+  <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-c"><div class="stat-n" style="color:var(--r);">${debts.length}</div><div class="stat-l">Active</div></div>
+    <div class="stat-c"><div class="stat-n" style="color:var(--r);font-size:16px;">${fmt(totalOwed)}</div><div class="stat-l">Total owed</div></div>
+    <div class="stat-c"><div class="stat-n" style="color:var(--a);">${overdue.length}</div><div class="stat-l">Overdue</div></div>
+  </div>
+  ${debts.length===0?`<div style="text-align:center;padding:32px;color:var(--t3);font-size:13px;">🎉 No active debts!</div>`:''}
+  ${debts.map(d=>{
+    const total=parseFloat(d.totalAmount||0),paid=parseFloat(d.amountPaid||d.paid||0),rem=parseFloat(d.remaining||total-paid||0),pct=total>0?Math.round((paid/total)*100):0;
+    const days=Math.round((new Date()-new Date(d.dateAdded||d.date||0))/(86400000)),isOv=days>7&&rem>0;
+    return `<div class="debt-card ${isOv?'ov':''}">
+      <div class="debt-top">
+        <div class="debt-av">${ini(d.name)}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="debt-name">${d.name}</div>
+          <div class="debt-date">${d.dateAdded||d.date||''} · ${days}d ago ${isOv?'⚠️ Overdue':''}</div>
+          ${d.note?`<div style="font-size:10px;color:var(--t2);margin-top:1px;">${d.note}</div>`:''}
+          ${d.phone?`<div style="font-size:10px;color:var(--t3);">📞 ${d.phone}</div>`:''}
+        </div>
+      </div>
+      <div class="da-grid">
+        <div class="da-box"><div class="da-val" style="color:var(--rd);">${fmt(total)}</div><div class="da-lbl">Total</div></div>
+        <div class="da-box"><div class="da-val" style="color:var(--gd);">${fmt(paid)}</div><div class="da-lbl">Paid</div></div>
+        <div class="da-box"><div class="da-val" style="color:${rem>0?'var(--rd)':'var(--gd)'};">${fmt(rem)}</div><div class="da-lbl">Remaining</div></div>
+      </div>
+      <div class="debt-bar"><div class="debt-bar-fill" style="width:${pct}%;background:${pct===100?'var(--g)':'var(--a)'}"></div></div>
+      <div style="font-size:10px;color:var(--t3);margin-bottom:8px;">${pct}% paid</div>
+      <div class="debt-actions">
+        <button class="db pay" onclick="showPayDebt('${d.id}',${total},${paid})">💰 Record payment</button>
+        <button class="db remind" onclick="sendReminder('${d.id}','${d.name}','${d.phone||''}',${rem})">📲 Remind</button>
+        ${pct===100?`<button class="db" style="background:var(--gl);color:var(--gd);border-color:var(--g);" onclick="markSettled('${d.id}')">✓ Settled</button>`:''}
+        <button class="db del" onclick="delDebt('${d.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('')}
+  <div class="sec"><div class="sh">➕ Add debt</div>
+  <div class="add-form">
+    <input type="text" id="dnN" placeholder="Name"/>
+    <input type="text" id="dnP" placeholder="Phone (optional)"/>
+    <input type="number" id="dnA" placeholder="Amount ₱" class="full" min="0"/>
+    <input type="date" id="dnD" value="${new Date().toISOString().split('T')[0]}" class="full"/>
+    <textarea id="dnNote" placeholder="Note" class="full" rows="2" style="resize:none;font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:8px 10px;background:var(--bg);color:var(--t);"></textarea>
+  </div>
+  <button class="save-btn" onclick="addDebt()">Add debt</button></div>`;
+}
+
+function showPayDebt(id,total,paid){
+  const rem=total-paid;
+  const modal=document.createElement('div');modal.className='modal-wrap';
+  modal.innerHTML=`<div class="pay-modal"><h3>Record payment<br><span style="font-size:11px;color:var(--t3);font-weight:400;">Remaining: ${fmt(rem)}</span></h3>
+  <input class="big-in" type="number" id="payAmt" placeholder="0" min="0" max="${rem}" value=""/>
+  <div class="numpad">${['1','2','3','4','5','6','7','8','9','⌫','0','OK'].map(k=>`<button class="nk ${k==='OK'?'ok':k==='⌫'?'clr':''}" onclick="numKey('${k}','${id}',${total},${paid})">${k}</button>`).join('')}</div>
+  <button class="mbtn2" onclick="this.closest('.modal-wrap').remove()">Cancel</button></div>`;
+  document.body.appendChild(modal);
+}
+
+async function numKey(k,id,total,oldPaid){
+  const inp=document.getElementById('payAmt');if(!inp)return;
+  if(k==='⌫'){inp.value=inp.value.slice(0,-1);}
+  else if(k==='OK'){
+    const amt=parseFloat(inp.value)||0;if(amt<=0){toast('Enter amount');return;}
+    const newPaid=Math.min(oldPaid+amt,total),newRem=total-newPaid;
+    const d=DB.debts.find(x=>x.id===id);
+    if(d){d.amountPaid=newPaid;d.remaining=newRem;}
+    try{await api('updateDebt',{id,updates:{amountPaid:newPaid}});}catch(e){toast('⚠️ Could not sync');}
+    document.querySelectorAll('.modal-wrap').forEach(m=>m.remove());
+    renderDebt();toast(`₱${amt.toFixed(2)} payment recorded ✓`);
+  }else{inp.value=(inp.value||'')+k;}
+}
+
+async function sendReminder(id,name,phone,rem){
+  const d=DB.debts.find(x=>x.id===id);
+  if(d){if(!d.reminders)d.reminders='';d.reminders=d.reminders+(d.reminders?',':'')+new Date().toLocaleDateString('en-PH');}
+  try{await api('updateDebt',{id,updates:{reminders:d?.reminders||''}});}catch(e){}
+  const msg=`Hi ${name}! Friendly reminder: you have an outstanding balance of ${fmt(rem)} at Court POS. Please settle at your earliest convenience. Thank you! 🏸`;
+  if(phone&&phone!=='undefined'&&phone.length>5){window.open(`https://wa.me/63${phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`);}
+  else{toast('Reminder logged — no phone on file');}
+}
+
+async function markSettled(id){
+  const d=DB.debts.find(x=>x.id===id);if(d)d.status='settled';
+  try{await api('updateDebt',{id,updates:{status:'settled'}});}catch(e){}
+  renderDebt();toast('Debt settled ✓');
+}
+
+async function delDebt(id){
+  if(!confirm('Delete this debt?'))return;
+  DB.debts=DB.debts.filter(x=>x.id!==id);
+  try{await api('deleteDebt',{id});}catch(e){}
+  renderDebt();toast('Deleted');
+}
+
+async function addDebt(){
+  const n=document.getElementById('dnN').value.trim(),p=document.getElementById('dnP').value.trim(),a=parseFloat(document.getElementById('dnA').value)||0,dt=document.getElementById('dnD').value,note=document.getElementById('dnNote').value.trim();
+  if(!n||a<=0){toast('Name and amount required');return;}
+  const entry={id:'D'+uid(),name:n,phone:p,amount:a,paid:0,totalAmount:a,amountPaid:0,remaining:a,dateAdded:dt,note,status:'active'};
+  DB.debts.push(entry);
+  try{await api('saveDebt',entry);}catch(e){toast('⚠️ Saved locally only');}
+  document.getElementById('dnN').value='';document.getElementById('dnP').value='';document.getElementById('dnA').value='';document.getElementById('dnNote').value='';
+  renderDebt();toast(n+' debt added ✓');
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS (Admin) — fully editable every field
+// ═══════════════════════════════════════════════
+function inp(val,w,onchange,type='text',placeholder=''){
+  return `<input type="${type}" value="${String(val).replace(/"/g,'&quot;')}" placeholder="${placeholder}"
+    style="width:${w};font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 7px;background:var(--bg);color:var(--t);${type==='number'?'text-align:right;':''}"
+    oninput="${onchange}"/>`;
+}
+
+function renderSettings(){
+  if(SESSION.user?.role!=='admin'){document.getElementById('fpg-settings').innerHTML='<div style="text-align:center;padding:40px;color:var(--t3);">Admin only</div>';return;}
+  const cfg=DB.config;
+
+  document.getElementById('fpg-settings').innerHTML=`
+  <h4 style="font-size:15px;font-weight:800;margin-bottom:4px;">⚙️ Settings</h4>
+  <p style="font-size:11px;color:var(--t3);margin-bottom:14px;">Every field below is editable. Tap Save when done.</p>
+
+  ${['bad','pick'].map(sp=>{
+    const isBad=sp==='bad', courts=getCourts(sp), prods=getProds(sp);
+    const clr=isBad?'var(--g)':'var(--b)', bg=isBad?'var(--gl)':'var(--bl)', tx=isBad?'var(--gd)':'var(--bd)';
+    return `<div class="sec">
+      <div class="sh">
+        <span style="background:${bg};color:${tx};padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">${isBad?'🏸 Badminton':'🟡 Pickleball'}</span>
+      </div>
+
+      <!-- COURTS -->
+      <div style="font-size:10px;color:var(--t3);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">
+        Courts &amp; Entry Fees
+        <span style="font-weight:400;text-transform:none;margin-left:8px;">Name · Price · Time unit (e.g. 30min, 1hr, per game)</span>
+      </div>
+      ${courts.map((c,i)=>`
+      <div class="edit-row" style="flex-wrap:wrap;gap:5px;">
+        ${inp(c.name,'90px',`DB.config['courts_${sp}'][${i}].name=this.value`,'text','Court name')}
+        <span style="font-size:12px;color:var(--t3);">₱</span>
+        ${inp(c.price,'70px',`DB.config['courts_${sp}'][${i}].price=parseFloat(this.value)||0`,'number','0')}
+        <span style="font-size:11px;color:var(--t3);">/</span>
+        ${inp(c.unit,'70px',`DB.config['courts_${sp}'][${i}].unit=this.value`,'text','30min')}
+        <button class="del-btn" onclick="DB.config['courts_${sp}'].splice(${i},1);renderSettings()" title="Remove court">×</button>
+      </div>`).join('')}
+      <div class="add-row" style="margin-top:8px;">
+        <input type="text"   id="bc_name_${sp}" placeholder="Court name" style="flex:1;min-width:80px;"/>
+        <input type="number" id="bc_price_${sp}" placeholder="₱" style="width:65px;" min="0"/>
+        <input type="text"   id="bc_unit_${sp}"  placeholder="30min" style="width:65px;"/>
+        <button style="background:${clr};color:#fff;border:none;padding:7px 12px;border-radius:var(--rads);font-size:16px;font-weight:700;" onclick="addCourtCfg('${sp}')">+</button>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div style="font-size:10px;color:var(--t3);margin:14px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">
+        Products &amp; Rentals
+        <span style="font-weight:400;text-transform:none;margin-left:8px;">Icon · Name · Note · Price · Type</span>
+      </div>
+      ${prods.map((p,i)=>`
+      <div style="border:0.5px solid var(--bdr);border-radius:var(--rads);padding:8px;margin-bottom:6px;background:var(--bg);">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
+          ${inp(p.icon||'🎯','44px',`DB.config['products_${sp}'][${i}].icon=this.value`,'text','🎯')}
+          ${inp(p.name,'130px',`DB.config['products_${sp}'][${i}].name=this.value`,'text','Product name')}
+          <select style="font-size:11px;border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 6px;background:var(--bg);"
+            onchange="DB.config['products_${sp}'][${i}].type=this.value">
+            <option value="inventory" ${p.type==='inventory'?'selected':''}>📦 Inventory</option>
+            <option value="rental"    ${p.type==='rental'   ?'selected':''}>🎾 Rental</option>
+          </select>
+          <button class="del-btn" onclick="DB.config['products_${sp}'].splice(${i},1);renderSettings()" title="Remove product">×</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--t3);">₱</span>
+          ${inp(p.price,'70px',`DB.config['products_${sp}'][${i}].price=parseFloat(this.value)||0`,'number','0')}
+          <span style="font-size:11px;color:var(--t3);">Note:</span>
+          ${inp(p.note||'','110px',`DB.config['products_${sp}'][${i}].note=this.value`,'text','e.g. Per roll')}
+          ${p.isShuttle?`<span style="font-size:11px;color:var(--t3);">Qty per pack:</span>
+          ${inp(p.sQty||1,'50px',`DB.config['products_${sp}'][${i}].sQty=parseInt(this.value)||1`,'number','1')}`:''}
+        </div>
+      </div>`).join('')}
+      <div style="display:grid;grid-template-columns:44px 1fr 70px 70px auto auto;gap:5px;margin-top:8px;align-items:center;">
+        <input type="text"   id="np_icon_${sp}"  value="🎯" style="font-size:13px;border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 4px;background:var(--bg);text-align:center;"/>
+        <input type="text"   id="np_name_${sp}"  placeholder="Product name" style="font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 7px;background:var(--bg);"/>
+        <input type="number" id="np_price_${sp}" placeholder="₱"    style="font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 7px;background:var(--bg);text-align:right;" min="0"/>
+        <input type="text"   id="np_note_${sp}"  placeholder="Note"  style="font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 7px;background:var(--bg);"/>
+        <select id="np_type_${sp}" style="font-size:12px;border:1px solid var(--bdr);border-radius:var(--rads);padding:5px 6px;background:var(--bg);">
+          <option value="inventory">Inventory</option>
+          <option value="rental">Rental</option>
+        </select>
+        <button style="background:${clr};color:#fff;border:none;padding:7px 12px;border-radius:var(--rads);font-size:16px;font-weight:700;" onclick="addProdCfg('${sp}')">+</button>
+      </div>
+    </div>`;
+  }).join('')}
+
+  <!-- DISCOUNTS & GCASH -->
+  <div class="sec">
+    <div class="sh">💰 Discounts, GCash &amp; Labels</div>
+
+    <div style="font-size:10px;color:var(--t3);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Member discounts</div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">⭐ Premium member discount</span>
+      ${inp((parseFloat(cfg.discountPremium||0.15)*100).toFixed(0),'65px','DB.config.discountPremium=parseFloat(this.value)/100','number','15')}
+      <span style="font-size:12px;color:var(--t3);">%</span>
+    </div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">Regular member discount</span>
+      ${inp((parseFloat(cfg.discountRegular||0.10)*100).toFixed(0),'65px','DB.config.discountRegular=parseFloat(this.value)/100','number','10')}
+      <span style="font-size:12px;color:var(--t3);">%</span>
+    </div>
+
+    <div style="font-size:10px;color:var(--t3);margin:12px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">GCash</div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">GCash number</span>
+      ${inp(cfg.gcash||'','155px','DB.config.gcash=this.value','text','09XX-XXX-XXXX')}
+    </div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">Account name</span>
+      ${inp(cfg.gcashAcct||'','155px','DB.config.gcashAcct=this.value','text','e.g. Juan dela Cruz')}
+    </div>
+
+    <div style="font-size:10px;color:var(--t3);margin:12px 0 6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">App labels (what shows on buttons &amp; tabs)</div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">Badminton tab label</span>
+      ${inp(cfg.label_bad||'🏸 Badminton','160px','DB.config.label_bad=this.value','text','🏸 Badminton')}
+    </div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">Pickleball tab label</span>
+      ${inp(cfg.label_pick||'🟡 Pickleball','160px','DB.config.label_pick=this.value','text','🟡 Pickleball')}
+    </div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">App name (top bar)</span>
+      ${inp(cfg.appName||'Court POS','160px','DB.config.appName=this.value;document.querySelector(".tb-logo").textContent=this.value','text','Court POS')}
+    </div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">Entry fee section label</span>
+      ${inp(cfg.label_entry||'🏟️ Entry Fee — Court','200px','DB.config.label_entry=this.value','text','🏟️ Entry Fee — Court')}
+    </div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">Products section label</span>
+      ${inp(cfg.label_products||'📦 Products (Inventory)','200px','DB.config.label_products=this.value','text','📦 Products (Inventory)')}
+    </div>
+    <div class="edit-row">
+      <span style="flex:1;font-size:12px;">Rentals section label</span>
+      ${inp(cfg.label_rentals||'🎾 Rentals / Non-Inventory','200px','DB.config.label_rentals=this.value','text','🎾 Rentals / Non-Inventory')}
+    </div>
+  </div>
+
+  <!-- DATA -->
+  <div class="sec">
+    <div class="sh">💾 Data</div>
+    <button onclick="exportData()" style="width:100%;padding:10px;border-radius:var(--rads);border:1px solid var(--bdr);background:var(--card);font-size:12px;font-weight:700;margin-bottom:7px;">⬇️ Export backup (JSON)</button>
+    <button onclick="clearPl()" style="width:100%;padding:10px;border-radius:var(--rads);border:1px solid #F09595;background:var(--rl);color:var(--rd);font-size:12px;font-weight:700;">🗑️ Clear all players from tracker</button>
+  </div>
+
+  <button class="save-btn" onclick="saveSettings()">💾 Save all settings to Google Sheets</button>
+  <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:8px;">Changes save to Google Sheets and sync to all devices instantly.</p>`;
+}
+
+function addCourtCfg(sp){
+  const n=document.getElementById('bc_name_'+sp).value.trim();
+  const p=parseFloat(document.getElementById('bc_price_'+sp).value)||0;
+  const u=document.getElementById('bc_unit_'+sp).value.trim()||'30min';
+  if(!n){toast('Enter a court name');return;}
+  const prefix=sp==='bad'?'B':'P';
+  if(!DB.config['courts_'+sp])DB.config['courts_'+sp]=[];
+  DB.config['courts_'+sp].push({id:prefix+uid(),name:n,price:p,unit:u});
+  renderSettings();
+}
+
+function addProdCfg(sp){
+  const icon=document.getElementById('np_icon_'+sp).value||'🎯';
+  const n=document.getElementById('np_name_'+sp).value.trim();
+  const p=parseFloat(document.getElementById('np_price_'+sp).value)||0;
+  const note=document.getElementById('np_note_'+sp).value.trim();
+  const t=document.getElementById('np_type_'+sp).value;
+  if(!n){toast('Enter a product name');return;}
+  if(!DB.config['products_'+sp])DB.config['products_'+sp]=[];
+  DB.config['products_'+sp].push({id:'PR'+uid(),name:n,price:p,icon,note,type:t,isShuttle:false,sQty:1});
+  renderSettings();
+}
+
+async function saveSettings(){
+  try{
+    await api('saveConfig',{config:{
+      gcash:DB.config.gcash,
+      gcashAcct:DB.config.gcashAcct||'',
+      discountPremium:DB.config.discountPremium,
+      discountRegular:DB.config.discountRegular,
+      courts_bad:DB.config.courts_bad,
+      courts_pick:DB.config.courts_pick,
+      products_bad:DB.config.products_bad,
+      products_pick:DB.config.products_pick,
+      label_bad:DB.config.label_bad||'🏸 Badminton',
+      label_pick:DB.config.label_pick||'🟡 Pickleball',
+      appName:DB.config.appName||'Court POS',
+      label_entry:DB.config.label_entry||'🏟️ Entry Fee — Court',
+      label_products:DB.config.label_products||'📦 Products (Inventory)',
+      label_rentals:DB.config.label_rentals||'🎾 Rentals / Non-Inventory',
+    }});
+    // Apply label changes live
+    const logo=document.querySelector('.tb-logo');
+    if(logo)logo.textContent=DB.config.appName||'Court POS';
+    const tBad=document.getElementById('t-bad'),tPick=document.getElementById('t-pick');
+    if(tBad)tBad.textContent=DB.config.label_bad||'🏸 Badminton';
+    if(tPick)tPick.textContent=DB.config.label_pick||'🟡 Pickleball';
+    toast('✓ Settings saved to Google Sheets');
+  }catch(e){toast('⚠️ Could not sync: '+e.message);}
+}
+
+// ═══════════════════════════════════════════════
+// USERS (Admin)
+// ═══════════════════════════════════════════════
+function renderUsers(){
+  if(SESSION.user?.role!=='admin'){document.getElementById('fpg-users').innerHTML='<div style="text-align:center;padding:40px;color:var(--t3);">Admin only</div>';return;}
+  const eu=ST.editUser;
+  document.getElementById('fpg-users').innerHTML=`
+  <h4 style="font-size:15px;font-weight:800;margin-bottom:12px;">👤 Users</h4>
+  <div class="sec">
+    <div class="sh">${DB.users.length} users</div>
+    ${DB.users.map(u=>`<div class="mc-row">
+      <div class="av" style="background:${u.role==='admin'?'var(--pul)':'var(--gl)'};color:${u.role==='admin'?'var(--pud)':'var(--gd)'};">${ini(u.name)}</div>
+      <div class="mc-info"><div class="mc-name">${u.name}</div><div class="mc-sub">@${u.username} · <span style="font-weight:700;color:${u.role==='admin'?'var(--pud)':'var(--gd)'};">${u.role}</span></div></div>
+      <div class="mc-act"><button class="ic-btn" onclick="editUsr('${u.id}')">✏️</button></div>
+    </div>`).join('')}
+  </div>
+  <div class="sec">
+    <div class="sh">${eu?'✏️ Edit user':'➕ Add user'}</div>
+    <div class="add-form">
+      <input type="text" id="ufN" placeholder="Display name" value="${eu?eu.name:''}"/>
+      <input type="text" id="ufU" placeholder="Username" value="${eu?eu.username:''}" ${eu?'readonly':''}/>
+      <input type="password" id="ufP" placeholder="${eu?'New password (blank = keep)':'Password'}" class="full"/>
+      <select id="ufR" class="full"><option value="staff" ${eu?.role==='staff'?'selected':''}>Staff (POS only)</option><option value="admin" ${eu?.role==='admin'?'selected':''}>Admin (full access)</option></select>
+    </div>
+    <button class="save-btn" onclick="saveUsr()">${eu?'Save changes':'Add user'}</button>
+    ${eu?`<button class="clr" onclick="ST.editUser=null;renderUsers()">Cancel</button>`:''}
+  </div>`;
+}
+
+function editUsr(id){ST.editUser=DB.users.find(u=>u.id===id);renderUsers();document.getElementById('fpg-users').scrollTop=9999;}
+
+async function saveUsr(){
+  const n=document.getElementById('ufN').value.trim(),u=document.getElementById('ufU').value.trim(),p=document.getElementById('ufP').value,r=document.getElementById('ufR').value;
+  if(!n||!u){toast('Name and username required');return;}
+  // Note: in production you'd hash passwords — this is demo-level auth
+  if(ST.editUser){
+    const usr=DB.users.find(x=>x.id===ST.editUser.id);
+    if(usr){usr.name=n;usr.role=r;if(p)usr.password=p;}
+    ST.editUser=null;toast('User updated ✓');
+  }else{
+    if(!p){toast('Password required');return;}
+    if(DB.users.find(x=>x.username===u)){toast('Username taken');return;}
+    DB.users.push({id:'U'+uid(),username:u,password:p,role:r,name:n,active:'true'});
+    toast(n+' added ✓');
+  }
+  renderUsers();
+}
+
+// ═══════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════
+window.addEventListener('load', init);
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js')
+      .then(()=>console.log('SW registered'))
+      .catch(e=>console.log('SW error',e));
+  });
+}
+</script>
+</body>
+</html>
