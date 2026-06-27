@@ -4,14 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <meta name="theme-color" content="#1D9E75"/>
-<link rel="manifest" href="manifest.json"/>
-<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png"/>
-<link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png"/>
-<meta name="apple-mobile-web-app-title" content="Court POS"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Court POS</title>
+<link rel="manifest" href="/Court-Pos/manifest.json"/>
+<link rel="apple-touch-icon" href="/Court-Pos/icons/icon-192x192.png"/>
+<meta name="apple-mobile-web-app-title" content="Court POS"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <style>
 :root{
   --g:#1D9E75;--gl:#E1F5EE;--gd:#085041;--gm:#0F6E56;
@@ -807,11 +807,11 @@ function doPrint(btn){
   <hr><table><tr><td>Payment</td><td align="right">${pL[d.pay]||d.pay}</td></tr>${d.pay==='cash'?`<tr><td>Cash</td><td align="right">₱${parseFloat(d.cash).toFixed(2)}</td></tr><tr><td>Change</td><td align="right">₱${parseFloat(d.chg).toFixed(2)}</td></tr>`:''}</table>
   <p class="foot">Thank you for playing! 🏸🟡</p>
 <script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js', {scope: '/'})
-      .then(function(reg){ console.log('SW registered:', reg.scope); })
-      .catch(function(err){ console.log('SW error:', err); });
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/Court-Pos/sw.js', { scope: '/Court-Pos/' })
+      .then(function (reg) { console.log('SW OK:', reg.scope); })
+      .catch(function (e) { console.warn('SW failed:', e); });
   });
 }
 </script>
@@ -1323,11 +1323,11 @@ window.addEventListener('load', init);
 </script>
 
 <script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js', {scope: '/'})
-      .then(function(reg){ console.log('SW registered:', reg.scope); })
-      .catch(function(err){ console.log('SW error:', err); });
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/Court-Pos/sw.js', { scope: '/Court-Pos/' })
+      .then(function (reg) { console.log('SW OK:', reg.scope); })
+      .catch(function (e) { console.warn('SW failed:', e); });
   });
 }
 </script>

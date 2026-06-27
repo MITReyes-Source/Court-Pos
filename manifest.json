@@ -2,45 +2,74 @@
   "name": "Court POS — Badminton & Pickleball",
   "short_name": "Court POS",
   "description": "Point of Sale system for Badminton and Pickleball courts with real-time Google Sheets sync",
-  "start_url": "/Court-Pos/",
+  "start_url": "/Court-Pos/index.html",
   "scope": "/Court-Pos/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#1D9E75",
   "theme_color": "#1D9E75",
   "orientation": "any",
   "lang": "en-PH",
-  "dir": "ltr",
-  "categories": ["business", "productivity", "utilities"],
-  "iarc_rating_id": "",
-  "prefer_related_applications": false,
-  "screenshots": [],
-  "shortcuts": [
+  "categories": ["business", "productivity"],
+  "icons": [
     {
-      "name": "Badminton POS",
-      "short_name": "Badminton",
-      "description": "Open Badminton point of sale",
-      "url": "/Court-Pos/",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "src": "/Court-Pos/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "name": "Pickleball POS",
-      "short_name": "Pickleball",
-      "description": "Open Pickleball point of sale",
-      "url": "/Court-Pos/",
-      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+      "src": "/Court-Pos/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Court-Pos/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Court-Pos/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Court-Pos/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Court-Pos/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Court-Pos/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Court-Pos/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Court-Pos/icons/icon-192x192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/Court-Pos/icons/icon-512x512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ],
-  "icons": [
-    { "src": "icons/icon-72.png",   "sizes": "72x72",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-96.png",   "sizes": "96x96",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-128.png",  "sizes": "128x128", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-144.png",  "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-152.png",  "sizes": "152x152", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-384.png",  "sizes": "384x384", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
